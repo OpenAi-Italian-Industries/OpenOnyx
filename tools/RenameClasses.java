@@ -1,10 +1,11 @@
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.RecordComponentNode;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.SimpleRemapper;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.RecordComponentNode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,15 +17,17 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-/** Renames every client.onyx class and package without loading input classes. */
+/** Renames every client.onyx class and package and disambiguates duplicate methods. */
 public final class RenameClasses {
     private static final String OLD_PREFIX = "client/onyx/";
     private static final String NEW_PREFIX = "openonyx/";
@@ -41,7 +44,8 @@ public final class RenameClasses {
         Path output = Paths.get(args[1]);
         Path mapping = args.length == 3 ? Paths.get(args[2]) : null;
         Map<String, String> classMap = buildMap(input);
-        rewrite(input, output, classMap);
+        Map<MethodKey, String> methodMap = buildMethodMap(input, classMap);
+        rewrite(input, output, classMap, methodMap);
         if (mapping != null) {
             writeMap(mapping, classMap);
         }
@@ -409,9 +413,72 @@ public final class RenameClasses {
         if (value.isEmpty()) return "Value";
         return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
-
-    private static void rewrite(Path input, Path output, Map<String, String> classMap)
+    private static Map<MethodKey, String> buildMethodMap(Path input, Map<String, String> classMap)
             throws IOException {
+        Map<MethodKey, String> result = new HashMap<>();
+        try (ZipFile zip = new ZipFile(input.toFile())) {
+            zip.stream().filter(entry -> entry.getName().endsWith(".class")).forEach(entry -> {
+                try (InputStream in = zip.getInputStream(entry)) {
+                    ClassNode node = new ClassNode();
+                    new ClassReader(in.readAllBytes()).accept(node, ClassReader.SKIP_CODE
+                            | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+                    Set<String> usedNames = new HashSet<>();
+                    for (MethodNode method : node.methods) {
+                        usedNames.add(method.name);
+                    }
+                    Map<String, List<MethodNode>> groups = new LinkedHashMap<>();
+                    for (MethodNode method : node.methods) {
+                        if (!method.name.equals("<init>") && !method.name.equals("<clinit>")) {
+                            groups.computeIfAbsent(method.name + argumentDescriptor(method.desc),
+                                    ignored -> new ArrayList<>()).add(method);
+                        }
+                    }
+                    for (List<MethodNode> methods : groups.values()) {
+                        Set<String> descriptors = new HashSet<>();
+                        for (MethodNode method : methods) {
+                            descriptors.add(method.desc);
+                        }
+                        if (descriptors.size() < 2) continue;
+                        methods.sort(Comparator.comparing(method -> method.desc));
+                        String owner = stripClass(entry.getName());
+                        String mappedOwner = classMap.get(owner);
+                        String base = methods.get(0).name;
+                        for (int index = 0; index < methods.size(); index++) {
+                            String name = base;
+                            if (index > 0) {
+                                int suffix = index + 1;
+                                name = base + "_" + suffix;
+                                while (usedNames.contains(name)) {
+                                    name = base + "_" + ++suffix;
+                                }
+                            }
+                            usedNames.add(name);
+                            MethodNode method = methods.get(index);
+                            result.put(new MethodKey(owner, method.name, method.desc), name);
+                            if (mappedOwner != null) {
+                                result.put(new MethodKey(mappedOwner, method.name, method.desc), name);
+                            }
+                        }
+                    }
+                } catch (IOException exception) {
+                    throw new RewriteException(exception);
+                }
+            });
+        } catch (RewriteException exception) {
+            throw exception.exception;
+        }
+        return result;
+    }
+
+    private static String argumentDescriptor(String descriptor) {
+        return descriptor.substring(0, descriptor.indexOf(')') + 1);
+    }
+
+    private record MethodKey(String owner, String name, String descriptor) {
+    }
+
+    private static void rewrite(Path input, Path output, Map<String, String> classMap,
+            Map<MethodKey, String> methodMap) throws IOException {
         Path parent = output.toAbsolutePath().getParent();
         if (parent != null) Files.createDirectories(parent);
         SimpleRemapper remapper = new SimpleRemapper(classMap) {
@@ -424,6 +491,12 @@ public final class RenameClasses {
             @Override
             public String mapMethodName(String owner, String name, String descriptor) {
                 String renamed = mapKillAuraMethod(owner, name, descriptor);
+                if (renamed != null) return renamed;
+                renamed = methodMap.get(new MethodKey(owner, name, descriptor));
+                if (renamed != null) return renamed;
+                String mappedOwner = classMap.get(owner);
+                renamed = mappedOwner == null ? null
+                        : methodMap.get(new MethodKey(mappedOwner, name, descriptor));
                 return renamed == null ? super.mapMethodName(owner, name, descriptor) : renamed;
             }
         };
