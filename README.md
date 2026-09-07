@@ -1,19 +1,48 @@
-# OpenOnyx but... Open Source
+# Onyx but... Open Source
 
 <p align="center">
-  <img src="./img/onyx-banner.png" alt="OpenOnyx reversed by the community" width="25%">
+  <img src="./img/onyx-banner.png" alt="Onyx reversed by the community" width="25%">
 </p>
 
 <p align="center">
   <img src="./img/deobf.jpg" alt="Deobfuscation" width="42%">
-  <img src="./img/onyxclient.png" alt="OpenOnyx logo" width="31%">
+  <img src="./img/onyxclient.png" alt="Onyx logo" width="31%">
 </p>
 
-## requirements
-
-- JDK 21 or newer
+- JDK 21 (the supplied runtime is Temurin 21.0.4)
 - Java decompiler / bytecode tooling for regeneration
 - highiq
+
+## build status
+
+The recovered tree is a decompiler output and is not currently a reproducible
+source build. `gradle compileJava` was tested with JDK 21 and fails on CFR
+artifacts such as invalid `void` locals and corrupted constructor parameters.
+The supplied binary remains runnable with its bundled Temurin 21.0.4 runtime;
+that binary is intentionally not part of the source-only repository.
+
+## static security review
+
+The supplied `onyx.jar` and renamed archive were reviewed without executing
+them or making network requests:
+
+- No persistence, startup registration, native loading, arbitrary class loading,
+  RAT command channel, webhook, Discord bot token, or credential-file harvesting
+  was identified.
+- Network code targets Microsoft/Xbox/Minecraft authentication, Mojang skin
+  lookup, configured Minecraft proxies, and Discord's local IPC socket.
+- The only local HTTP listener is the loopback OAuth callback on
+  `127.0.0.1:1337`.
+- `ProcessBuilder` is used by the optional Windows Spotify/media integration to
+  invoke a fixed temporary PowerShell script, and by the macOS integration to
+  invoke a fixed AppleScript. These paths read now-playing metadata and cover
+  art; they are not remote command execution.
+- File access is limited to client configuration, temporary media integration
+  files, and user-selected UI/configuration files. Clipboard reads/writes are
+  used by the UI.
+
+This is a static review, not a guarantee against behavior that only appears
+under an unobserved runtime condition.
 
 ## what is included
 
