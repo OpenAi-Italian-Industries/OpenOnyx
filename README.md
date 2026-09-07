@@ -1,7 +1,7 @@
 # OpenOnyx but... Open Source
 
 <p align="center">
-  <img src="./img/onyxclient.png" alt="OpenOnyx" width="25%">
+  <img src="./img/onyx-banner.png" alt="OpenOnyx reversed by the community" width="25%">
 </p>
 
 <p align="center">
