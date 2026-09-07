@@ -15,6 +15,11 @@
 
 ## build status
 
+The runnable OpenOnyx version is published at:
+
+- [Codeberg](https://codeberg.org/Claude-French-Industries/OpenOnyx)
+- [GitHub](https://github.com/OpenAi-Italian-Industries/OpenOnyx)
+
 `gradle clean jar --no-daemon` builds `build/libs/onyx-source.jar` from
 `launcher/SourceLauncher.java`. The source launcher delegates to the supplied
 `Start` entrypoint in `rt/libs/mc.jar`; `run.bat` uses that artifact together
