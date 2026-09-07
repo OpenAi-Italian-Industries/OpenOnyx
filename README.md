@@ -23,10 +23,11 @@ repositories:
 
 Run `run/run.bat` from that folder to launch the supplied runtime. The folder
 contains the runnable `onyx.jar`, bundled JRE, native libraries, and Minecraft
-runtime libraries. The source launcher is built separately with
-`gradle clean jar --no-daemon` into `build/libs/onyx-source.jar`; the recovered
-`src` tree is retained as decompiler output and is not currently a standalone
-compile target.
+runtime libraries. Install Git LFS before cloning so the large JRE files under
+`run/jre/` are downloaded instead of remaining pointer files. The source
+launcher is built separately with `gradle clean jar --no-daemon` into
+`build/libs/onyx-source.jar`; the recovered `src` tree is retained as
+decompiler output and is not currently a standalone compile target.
 
 ## static security review
 
