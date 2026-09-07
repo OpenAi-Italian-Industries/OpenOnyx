@@ -15,18 +15,18 @@
 
 ## build status
 
-The runnable OpenOnyx version is published at:
+The runnable OpenOnyx version is inside the `run/` folder in both published
+repositories:
 
 - [Codeberg](https://codeberg.org/Claude-French-Industries/OpenOnyx)
 - [GitHub](https://github.com/OpenAi-Italian-Industries/OpenOnyx)
 
-`gradle clean jar --no-daemon` builds `build/libs/onyx-source.jar` from
-`launcher/SourceLauncher.java`. The source launcher delegates to the supplied
-`Start` entrypoint in `rt/libs/mc.jar`; `run.bat` uses that artifact together
-with `onyx-renamed.jar` and the supplied runtime libraries. Those binary
-runtime inputs, assets, and the bundled JRE are intentionally not part of the
-source-only repository. The recovered `src` tree is retained as decompiler
-output for analysis and is not currently a standalone compile target.
+Run `run/run.bat` from that folder to launch the supplied runtime. The folder
+contains the runnable `onyx.jar`, bundled JRE, native libraries, and Minecraft
+runtime libraries. The source launcher is built separately with
+`gradle clean jar --no-daemon` into `build/libs/onyx-source.jar`; the recovered
+`src` tree is retained as decompiler output and is not currently a standalone
+compile target.
 
 ## static security review
 

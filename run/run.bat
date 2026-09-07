@@ -1,0 +1,2 @@
+@echo off
+jre\bin\javaw.exe -Xmx4G -Dfile.encoding=UTF-8 -Donyx.user="admin" -Djava.library.path="rt\natives" -cp "onyx.jar;rt\libs\*" Start --username i_use_pastes --gameDir "." --width 925 --height 530
