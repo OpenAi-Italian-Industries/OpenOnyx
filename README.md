@@ -15,11 +15,13 @@
 
 ## build status
 
-The recovered tree is a decompiler output and is not currently a reproducible
-source build. `gradle compileJava` was tested with JDK 21 and fails on CFR
-artifacts such as invalid `void` locals and corrupted constructor parameters.
-The supplied binary remains runnable with its bundled Temurin 21.0.4 runtime;
-that binary is intentionally not part of the source-only repository.
+`gradle clean jar --no-daemon` builds `build/libs/onyx-source.jar` from
+`launcher/SourceLauncher.java`. The source launcher delegates to the supplied
+`Start` entrypoint in `rt/libs/mc.jar`; `run.bat` uses that artifact together
+with `onyx-renamed.jar` and the supplied runtime libraries. Those binary
+runtime inputs, assets, and the bundled JRE are intentionally not part of the
+source-only repository. The recovered `src` tree is retained as decompiler
+output for analysis and is not currently a standalone compile target.
 
 ## static security review
 

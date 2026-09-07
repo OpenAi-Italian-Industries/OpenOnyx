@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+
+application {
+    mainClass = 'SourceLauncher'
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+sourceSets {
+    main {
+        java { srcDirs = ['launcher'] }
+    }
+}
+
+jar {
+    archiveBaseName = 'onyx-source'
+    manifest { attributes 'Main-Class': 'SourceLauncher' }
+}
