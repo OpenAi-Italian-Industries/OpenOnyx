@@ -2,3 +2,16 @@ tools/build/
 *.class
 build/
 .gradle/
+
+# Files created by the runnable client
+run/assets
+run/crash-reports/
+run/hs_err_pid*.log
+run/logs/
+run/onyx/
+run/options*.txt
+run/resourcepacks/
+run/saves/
+run/screenshots/
+run/servers.dat
+run/usercache.json

@@ -29,6 +29,30 @@ launcher is built separately with `gradle clean jar --no-daemon` into
 `build/libs/onyx-source.jar`; the recovered `src` tree is retained as
 decompiler output and is not currently a standalone compile target.
 
+### Linux (x86-64)
+
+The Linux launcher requires Bash, Java 21, and a PrismLauncher
+installation containing the Minecraft 1.8 assets. From the repository root:
+
+```bash
+cd run
+./run.sh
+```
+
+The script automatically searches PrismLauncher's Java installations before
+checking the system Java. It uses `$XDG_DATA_HOME/PrismLauncher`, or
+`$HOME/.local/share/PrismLauncher` when `XDG_DATA_HOME` is not set. Custom
+locations can be supplied without editing the script:
+
+```bash
+JAVA_BIN=/path/to/java ASSETS_DIR=/path/to/assets ./run.sh
+```
+
+The Linux runtime uses the Legacy Fabric LWJGL 2 compatibility build. It also
+loads `rt/libs-linux/mc-linux.jar`, a Linux-only copy of `mc.jar` that limits
+Onyx packet events to the client connection and selects Java NIO instead of the
+old Netty epoll transport. The original Windows runtime files are unchanged.
+
 ## static security review
 
 The supplied `onyx.jar` and renamed archive were reviewed without executing
